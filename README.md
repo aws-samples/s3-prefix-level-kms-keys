@@ -42,10 +42,10 @@ To install CDK please follow the steps in the [Getting Started](https://docs.aws
 
 ## __4. Installation__
 
-Clone the [git repo](git@github.com:aws-samples/s3-prefix-level-kms-keys.git) with the following command
+Clone the [git repo](https://github.com/aws-samples/s3-prefix-level-kms-keys/) with the following command
 
 ```
-git clone git@ssh.gitlab.aws.dev:mvishnub/prefix-level-keys.git
+git clone git@github.com:aws-samples/s3-prefix-level-kms-keys.git
 ```
 
 Change into the cdk directory with the following command.
