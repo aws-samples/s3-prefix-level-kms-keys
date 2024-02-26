@@ -88,7 +88,7 @@ At this point you are ready to deploy the necessary templates. This project is s
 Let us first install the Core stack with the following command. The email address provided here will receive notifications if there are any failures in correcting the KMS keys of S3 objects. So make sure you modify the email address.
 
 ```
-cdk deploy --context error_notification_email=abc@example.com  --context no_buckets_configured=true S3PrefixLevelKeys
+cdk deploy --context error_notification_email=abc@example.com  --context no_buckets_configured=true S3PrefixLevelKeys --app "python3 app.py"
 ```
 
 Please note that we are pasing in the "no_buckets_configured" context variable just because this is the first time we are creating the core stack and we do not have any buckets configured for Prefix level key enforcement. If you are implementing this solution, you will have to use this flag only the very first time. Every time after that you will have to use the input_file_name context variable as described in the next section.
@@ -118,7 +118,7 @@ The DynamoDB logs table will be, by default, deleted on deletion of this stack. 
 If you want to test this solution with your own pre-existing bucket and KMS keys, please skip this section and move to the next one. But, if you want to create an S3 bucket and three KMS keys for testing purposes, then run the following command.
 
 ```
-cdk deploy DemoForS3PrefixLevelKeys1
+cdk deploy DemoForS3PrefixLevelKeys1  --app "python3 app.py"
 ```
 
 You will get a prompt to confirm some of the IAM changes. Please press Y if you are comfortable with the changes being proposed. Once deployment finishes you will see output of each stack that will look like this:
@@ -186,7 +186,7 @@ If you have more than one bucket, then this file can be expanded to point to the
 Now use the following command to deploy the "Core" stack S3PrefixLevelKeys again but this time provide the input_file_name as input.json.
 
 ```
-cdk deploy --context error_notification_email=abc@example.com --context input_file_name=input.json S3PrefixLevelKeys
+cdk deploy --context error_notification_email=abc@example.com --context input_file_name=input.json S3PrefixLevelKeys --app "python3 app.py"
 ```
 
 This command will deploy (within the "Core" stack) a nested "Integration" stack for each bucket. This "Integration" stack will load the prefix-KMS key mapping information into the DynamoDB table, and set up the necessary S3 notification so that any new file created in this bucket will be processed by this solution.
