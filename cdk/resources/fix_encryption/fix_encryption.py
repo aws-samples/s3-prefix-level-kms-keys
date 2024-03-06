@@ -61,8 +61,10 @@ def fix_encryption_if_incorrect(bucket_name, object_name, version_id = None):
         #Initiating copy to fix the key
         if version_id:
             #Create a new version with the right encryption and log it
+            #response = s3.copy(Bucket = bucket_name, Key = object_name, CopySource= {'Bucket': bucket_name, 'Key': object_name, 'VersionId': version_id}, ExtraArgs = { 'SSEKMSKeyId' : new_kms_key_arn, 'ServerSideEncryption' : new_sse_type })
             #copy_object works only on files up to 5 GB. Ref: https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/copy_object.html. But copy uses MPU under the hood if needed.
-            response = s3.copy(Bucket = bucket_name, Key = object_name, CopySource= {'Bucket': bucket_name, 'Key': object_name, 'VersionId': version_id}, ExtraArgs = { 'SSEKMSKeyId' : new_kms_key_arn, 'ServerSideEncryption' : new_sse_type })
+            #Using copy_object here as it returns the New Version Id.
+            response=s3.copy_object(Bucket = bucket_name, Key = object_name, CopySource= {'Bucket': bucket_name, 'Key': object_name, 'VersionId': version_id}, SSEKMSKeyId = new_kms_key_arn, ServerSideEncryption = new_sse_type)
             new_version_id = response['VersionId']
             log_action_into_ddb(s3_object_path, current_sse_type, current_kms_key_arn, new_sse_type, new_kms_key_arn, action_taken = 'Initiated copy with the right key', action_reason = action_reason, new_version_id = new_version_id)
 

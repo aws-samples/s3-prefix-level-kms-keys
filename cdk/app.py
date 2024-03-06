@@ -20,7 +20,7 @@ core_stack = CoreResourcesStack(app, "S3PrefixLevelKeys")
 #Demo stack - For a non-versioned bucket
 demo_unversioned = DemoResourcesStack(app, f"DemoForS3PrefixLevelKeys1", bucket_versioned = False)
 
-#If you want to test out a versioned bucket, uncomment the following line. Please note the caveat in the README document about versioned buckets.
-#demo_versioned   = DemoResourcesStack(app, f"DemoForS3PrefixLevelKeys2",   bucket_versioned = True)
+#If you want to test out a versioned bucket, deploy the stack DemoForS3PrefixLevelKeys2
+demo_versioned   = DemoResourcesStack(app, f"DemoForS3PrefixLevelKeys2",   bucket_versioned = True)
 
 app.synth()

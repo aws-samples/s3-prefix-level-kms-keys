@@ -48,10 +48,10 @@ Clone the [git repo](https://github.com/aws-samples/s3-prefix-level-kms-keys/) w
 git clone git@github.com:aws-samples/s3-prefix-level-kms-keys.git
 ```
 
-Change into the cdk directory with the following command.
+Change into the repo directory with the following command.
 
 ```
-cd cdk
+cd s3-prefix-level-kms-keys
 ```
 
 The initialization process also creates a virtualenv within this project, stored under the `.venv` directory.  To create the virtualenv it assumes that there is a `python3` (or `python` for Windows) executable in your path with access to the `venv` package. If for any reason the automatic creation of the virtualenv fails, you can create the virtualenv manually.
@@ -85,6 +85,11 @@ At this point you are ready to deploy the necessary templates. This project is s
 2. Integration Stack - This is a nested stack within the "Core Stack". An integration stack contains the necessary configuration and permissions that are needed for the Core Stack to enforce the prefix level keys on a single bucket. For example, to enforce the keys, the core stack's DDB table needs to have the mapping for all the prefixes and the corresponding KMS key arns. The core stack's lambda function must also be able to access the files in the bucket it is enforcing prefix level kms keys in. There will be one instance of this stack for every bucket enforced by the core stack. This way, adding and removig new buckets is clean. You do not need to explicitly create this. The Core Stack creates the necessary number of Integration Stacks based on the information availablle in the "input.json" file.
 3. Demo Stack - This is a stack you will not need when you implement this solution for your own buckets. But just to show how the Core Stack works this Demo Stack creates an S3 bucket and 3 KMS keys for the prefixes "prefix1", "prefix2", "prefix3". When you want to use the "Core Stack" to enforce PLKK on one of your own buckets, only the Core Stack (and the nested Integration stacks) will be needed as the buckets and KMS keys will already be available from one of your existing Stacks.
 
+Change into the cdk directory with the following command
+```
+cd cdk
+```
+
 Let us first install the Core stack with the following command. The email address provided here will receive notifications if there are any failures in correcting the KMS keys of S3 objects. So make sure you modify the email address.
 
 ```
@@ -115,13 +120,13 @@ The DynamoDB logs table will be, by default, deleted on deletion of this stack. 
 
 ## __5. Creating an S3 Bucket and 3 KMS keys for a Demo__ ##
 
-If you want to test this solution with your own pre-existing bucket and KMS keys, please skip this section and move to the next one. But, if you want to create an S3 bucket and three KMS keys for testing purposes, then run the following command.
+If you want to test this solution with your own pre-existing bucket and KMS keys, please skip this section and move to the next one. But, if you want to create an S3 bucket and three KMS keys for testing purposes, then run the following command. [Note: use DemoForS3PrefixLevelKeys2 if you want to do a demo with a versioned bucket. The remaining steps are pretty much the same]
 
 ```
 cdk deploy DemoForS3PrefixLevelKeys1  --app "python3 app.py"
 ```
 
-You will get a prompt to confirm some of the IAM changes. Please press Y if you are comfortable with the changes being proposed. Once deployment finishes you will see output of each stack that will look like this:
+You will get a prompt to confirm the IAM changes. Please press Y if you are comfortable with the changes being proposed. Once deployment finishes you will see output of each stack that will look like this:
 
 ```
 DemoForS3PrefixLevelKeys1.OutputKeyforprefix1 = arn:aws:kms:us-east-1:111222333444:key/aaaaaaa-1234-12ab-34cd-111111111111
@@ -186,7 +191,7 @@ If you have more than one bucket, then this file can be expanded to point to the
 Now use the following command to deploy the "Core" stack S3PrefixLevelKeys again but this time provide the input_file_name as input.json.
 
 ```
-cdk deploy --context error_notification_email=abc@example.com --context input_file_name=input.json S3PrefixLevelKeys --app "python3 app.py"
+cdk deploy --context error_notification_email=mvishnub@amazon.com --context input_file_name=input.json S3PrefixLevelKeys --app "python3 app.py"
 ```
 
 This command will deploy (within the "Core" stack) a nested "Integration" stack for each bucket. This "Integration" stack will load the prefix-KMS key mapping information into the DynamoDB table, and set up the necessary S3 notification so that any new file created in this bucket will be processed by this solution.
@@ -224,10 +229,10 @@ touch a.txt
 Now copy this file to each of the three prefixes without providing any KMS key. Also copy it to a fourth prefix for which no key is configured.
 
 ```
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix1/
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix2/
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix3/
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix4/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix1/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix2/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix3/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix4/
 ```
 
 Once the above commands have completed, get the details of the objects with the commands below:
@@ -373,7 +378,7 @@ Interaction between the resources:
 ## __8. Caveats__ ##
 There are some caveats to keep in mind with this solution.
 
-* This solution can handle large objects but limited to the time out of the Lambda which is 15 minutes. To give you an idea, in tests, we have seen that 100 GB files are copied in about 7 minutes. But if there are batches of files processed by a lambda function, then if some of them fail, only the ones that failed will be tried in the next invocation.
+* This solution can handle large objects (for unversioned buckets) but limited to the time out of the Lambda which is 15 minutes. To give you an idea, in tests, we have seen that 100 GB files are copied in about 7 minutes. But if there are batches of files processed by a lambda function, then if some of them fail, only the ones that failed will be tried in the next invocation. For versioned buckets though, the maximum object size is 5 GB.
 
 * This solution works only for the following two encryption types:
     * Server-side encryption with AWS KMS ([SSE-KMS](https://docs.aws.amazon.com/AmazonS3/latest/userguide/UsingKMSEncryption.html))
