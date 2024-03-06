@@ -53,7 +53,7 @@ class DemoResourcesStack(Stack):
 
         NagSuppressions.add_resource_suppressions_by_path(
             self,
-            '/DemoForS3PrefixLevelKeys1/prefix-level-keys-demo-bucket/Resource',
+            '/'+self.stack_name+'/prefix-level-keys-demo-bucket/Resource',
             [
                 {
                 'id': 'AwsSolutions-S1',
