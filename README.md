@@ -5,11 +5,12 @@
 2. [Motivation](#2-motivation)
 3. [Prerequisites](#3-prerequisites)
 4. [Installation](#4-installation)
-5. [Testing](#5-testing)
-6. [Design](#6-design)
-7. [Caveats](#7-caveats)
-8. [Security](#8-security)
-9. [License](#9-license)
+5. [Creating an S3 Bucket and 3 KMS keys for a Demo](#5-creating-an-s3-bucket-and-3-kms-keys-for-a-demo)
+6. [Testing](#6-testing)
+7. [Design](#7-design)
+8. [Caveats](#8-caveats)
+9. [Security](#9-security)
+10. [License](#10-license)
 
 ## __1. Description__
 This is a demo of an approach to enforce Prefix level KMS keys on S3.
