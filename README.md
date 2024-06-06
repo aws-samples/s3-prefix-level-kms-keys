@@ -121,13 +121,13 @@ The DynamoDB logs table will be, by default, deleted on deletion of this stack. 
 
 ## __5. Creating an S3 Bucket and 3 KMS keys for a Demo__ ##
 
-If you want to test this solution with your own pre-existing bucket and KMS keys, please skip this section and move to the next one. But, if you want to create an S3 bucket and three KMS keys for testing purposes, then run the following command. [Note: use DemoForS3PrefixLevelKeys2 if you want to do a demo with a versioned bucket. The remaining steps are pretty much the same]
+If you want to test this solution with your own pre-existing bucket and KMS keys, please skip this section and move to the next one. But, if you want to create an S3 bucket and three KMS keys for testing purposes, then run the following command. Note that the instructions that follow create an unversioned bucket. If you want to test with a versioned bucket, use the stack DemoForS3PrefixLevelKeys2 instead of DemoForS3PrefixLevelKeys1. The remaining steps are pretty much the same]
 
 ```
 cdk deploy DemoForS3PrefixLevelKeys1  --app "python3 app.py"
 ```
 
-You will get a prompt to confirm the IAM changes. Please press Y if you are comfortable with the changes being proposed. Once deployment finishes you will see output of each stack that will look like this:
+You will get a prompt to confirm the IAM changes. Please press Y if you are comfortable with the changes being proposed. Once deployment finishes you will see output of each stack which will look like this:
 
 ```
 DemoForS3PrefixLevelKeys1.OutputKeyforprefix1 = arn:aws:kms:us-east-1:111222333444:key/aaaaaaa-1234-12ab-34cd-111111111111
@@ -145,7 +145,7 @@ Export the S3 bucket as an environment variable with the command below:
 export BUCKET_NAME=demostackfors3prefixleve-prefixlevelkeysdemobucke-a0bc1defg234
 ```
 
-Create two json files. The first one can be called bucket1.json. This must provide the mappings from prefixes (within the bucket) to KMS keys with which objects with those prefixes need to be encrypted. Each key at the top level is a prefix. Each prefix contains the corresponding KMS key ARN and a boolean value of whether objects in that prefix have to be encrypted with Dual Layer Encryption. If you have more than one bucket, then you will need to create multiple files (one for each bucket) structured as below.
+Create two json files. The first one can be called bucket1.json. This must provide the mappings from prefixes (within the bucket) to KMS keys with which objects with those prefixes need to be encrypted. Each json key at the top level is a prefix. Each prefix contains the corresponding KMS key ARN and a boolean value of whether objects in that prefix have to be encrypted with Dual Layer Encryption. If you have more than one bucket, then you will need to create multiple files (one for each bucket) structured as below.
 
 __bucket1.json__
 ```
@@ -165,7 +165,7 @@ __bucket1.json__
 }
 ```
 
-Now create a file called input.json with the structure as below. The top level keys in this file are bucket names that contain the corresponding mapping information file name. Again, if you are using your own bucket use that bucket name in this file.
+Now create a file called input.json with the structure as below. The top level json keys in this file are bucket names that contain the corresponding mapping information file name. Again, if you are using your own bucket use that bucket name in this file.
 
 __input.json__
 
@@ -177,7 +177,7 @@ __input.json__
 }
 ```
 
-If you have more than one bucket, then this file can be expanded to point to the mapping data for other buckets as below. This is not needed for this test we are working with a single bucket.
+If you have more than one bucket, then this file can be expanded to point to the mapping data for other buckets as below. This is not needed for this test as we are working with a single bucket.
 ```
 {
   "demostackfors3prefixleve-prefixlevelkeysdemobucke-a0bc1defg234": {
@@ -192,7 +192,7 @@ If you have more than one bucket, then this file can be expanded to point to the
 Now use the following command to deploy the "Core" stack S3PrefixLevelKeys again but this time provide the input_file_name as input.json.
 
 ```
-cdk deploy --context error_notification_email=mvishnub@amazon.com --context input_file_name=input.json S3PrefixLevelKeys --app "python3 app.py"
+cdk deploy --context error_notification_email=abc@example.com --context input_file_name=input.json S3PrefixLevelKeys --app "python3 app.py"
 ```
 
 This command will deploy (within the "Core" stack) a nested "Integration" stack for each bucket. This "Integration" stack will load the prefix-KMS key mapping information into the DynamoDB table, and set up the necessary S3 notification so that any new file created in this bucket will be processed by this solution.
@@ -230,10 +230,10 @@ touch a.txt
 Now copy this file to each of the three prefixes without providing any KMS key. Also copy it to a fourth prefix for which no key is configured.
 
 ```
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix1/
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix2/
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix3/
-aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket2prefix4/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix1/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix2/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix3/
+aws s3 cp ./a.txt s3://$BUCKET_NAME/bucket1prefix4/
 ```
 
 Once the above commands have completed, get the details of the objects with the commands below:
@@ -349,12 +349,12 @@ Once testing is complete, to delete the stacks created, please run the following
 
 Delete the core stack
 ```
-cdk destroy S3PrefixLevelKeys
+cdk destroy --app "python3 app.py" S3PrefixLevelKeys
 ```
 
 Delete the demo bucket stack
 ```
-cdk destroy DemoForS3PrefixLevelKeys1
+cdk destroy --app "python3 app.py" DemoForS3PrefixLevelKeys1
 ```
 
 ## __7. Design__
