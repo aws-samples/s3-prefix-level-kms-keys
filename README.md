@@ -27,7 +27,7 @@ Given below is how the flow of what happens when an object is uploaded to the S3
 
 ![Process flow](flow.png)
 
-Please read the Caveats section below before you start using this in production.
+Please read the Caveats section below before you start using this in production. Since this approach invokes Lambda for every object posted to S3, please make sure you understand the cost implications when dealing with very large number of objects.
 
 ## __2. Motivation__
 
@@ -86,9 +86,16 @@ At this point you are ready to deploy the necessary templates. This project is s
 2. Integration Stack - This is a nested stack within the "Core Stack". An integration stack contains the necessary configuration and permissions that are needed for the Core Stack to enforce the prefix level keys on a single bucket. For example, to enforce the keys, the core stack's DDB table needs to have the mapping for all the prefixes and the corresponding KMS key arns. The core stack's lambda function must also be able to access the files in the bucket it is enforcing prefix level kms keys in. There will be one instance of this stack for every bucket enforced by the core stack. This way, adding and removig new buckets is clean. You do not need to explicitly create this. The Core Stack creates the necessary number of Integration Stacks based on the information availablle in the "input.json" file.
 3. Demo Stack - This is a stack you will not need when you implement this solution for your own buckets. But just to show how the Core Stack works this Demo Stack creates an S3 bucket and 3 KMS keys for the prefixes "prefix1", "prefix2", "prefix3". When you want to use the "Core Stack" to enforce PLKK on one of your own buckets, only the Core Stack (and the nested Integration stacks) will be needed as the buckets and KMS keys will already be available from one of your existing Stacks.
 
-Change into the cdk directory with the following command
+Change into the cdk directory with the following command.
+
 ```
 cd cdk
+```
+
+Bootstrap the environment for CDK if not already done. This can be done with the `cdk bootstrap` command. You can learn more about bootstrapping from the [CDK documentation](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html#getting_started_bootstrap). Make sure you replace the the placeholders ACCOUNT-NUMBER and REGION with the actual account number and region.
+
+```
+cdk bootstrap aws://ACCOUNT-NUMBER/REGION
 ```
 
 Let us first install the Core stack with the following command. The email address provided here will receive notifications if there are any failures in correcting the KMS keys of S3 objects. So make sure you modify the email address.
@@ -197,7 +204,7 @@ cdk deploy --context error_notification_email=abc@example.com --context input_fi
 
 This command will deploy (within the "Core" stack) a nested "Integration" stack for each bucket. This "Integration" stack will load the prefix-KMS key mapping information into the DynamoDB table, and set up the necessary S3 notification so that any new file created in this bucket will be processed by this solution.
 
-Once the Integration stack has been created, you can check the configuration on the DynamoDB Mapping table with the following command.
+Once the Integration stack has been created, you can check the configuration on the DynamoDB Mapping table with the following command. Please note that this uses the environment variable MAPPING_TABLE_NAME that was set in section 4.
 ```
 aws dynamodb scan --table-name $MAPPING_TABLE_NAME \
     --query 'Items[*].
