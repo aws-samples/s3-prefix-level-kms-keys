@@ -67,12 +67,9 @@ class BucketIntegrationStack(NestedStack):
                     "Effect": "Allow",
                     "Action": [
                         "s3:PutObject",
-                        "s3:GetObjectTagging",
-                        "s3:PutObjectTagging",
                         "s3:GetObject",
                         "s3:GetObjectVersion",
                         "s3:ListBucket",
-                        "s3:DeleteObjectTagging",
                         "s3:DeleteObject",
                         "s3:DeleteObjectVersion"
                     ],
@@ -86,9 +83,7 @@ class BucketIntegrationStack(NestedStack):
                     "Action": [
                         "kms:Encrypt",
                         "kms:Decrypt",
-                        "kms:ReEncrypt*",
-                        "kms:GenerateDataKey*",
-                        "kms:DescribeKey"
+                        "kms:GenerateDataKey",
                     ],
                     "Resource": kms_key_arns
                 }

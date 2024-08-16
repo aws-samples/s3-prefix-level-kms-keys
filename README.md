@@ -386,6 +386,8 @@ Interaction between the resources:
 ## __8. Caveats__ ##
 There are some caveats to keep in mind with this solution.
 
+* This solution is applicable only to General purpose S3 buckets and not for Directory buckets as Directory buckets do not support SSE-KMS. Please see [documentation](https://docs.aws.amazon.com/AmazonS3/latest/userguide/directory-buckets-overview.html) for the differences between these two types of buckets.
+
 * This solution can handle large objects (for unversioned buckets) but limited to the time out of the Lambda which is 15 minutes. To give you an idea, in tests, we have seen that 100 GB files are copied in about 7 minutes. But if there are batches of files processed by a lambda function, then if some of them fail, only the ones that failed will be tried in the next invocation. For versioned buckets though, the maximum object size is 5 GB.
 
 * This solution works only for the following two encryption types:
@@ -398,7 +400,7 @@ There are some caveats to keep in mind with this solution.
 
 * This solution invokes the Lambda twice for every object addition/update which would lead to additional costs. This is because, when trying to fix the key (in case the key of the object is wrong), the lambda itself invokes the [copy_object](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/s3/client/copy_object.html) method. This will, in turn, trigger another S3 event which will trigger the Lambda again. This time though, since the keys will match, no further invokes will be triggered.
 
-* When the file is copied (to fix the encryption key) any ACLs on the uploaded object will be lost. So if you are using ACLs on the bucket this solution might not be suitable for your needs.
+* When the file is copied (to fix the encryption key) any ACLs on the uploaded object will be lost. So if you are using ACLs on the bucket this solution might not be suitable for your needs. Also, copying an object resets any system-controlled metadata like creation date and last modified date, while retaining user-defined or user-controlled metadata like storage class as described in the [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/userguide/copy-object.html) documentation.
 
 * Concurrent/high-frequency writes might lead to a newer version of the object replaced with an older version. (For this paragraph, the word "version" does not refer to S3 versioning, but just refers to the natural English usage of the word "version"). The Lambda function uses a 2-step high level logic. 1/ Check if the key of the object matches that of the prefix (as per the mapping table) and 2/ If it does not match, then initiate a copy. Because they are not part of a transaction, there could be concurrent writes that might lead to unpredictable results. You need to be aware of this possibility to make sure they meet your needs. 
     * If a newer upload of the S3 object completes after the GetObject but before the copy then it would still not be a problem, since the copy call will just act on the latest object.
